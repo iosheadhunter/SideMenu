@@ -612,9 +612,7 @@ private extension SideMenuNavigationController {
 
     @discardableResult func addSwipeToDismissGesture(to view: UIView?) -> UIPanGestureRecognizer? {
         guard enableSwipeToDismissGesture else { return nil }
-        return UIPanGestureRecognizer(addTo: view, target: self, action: #selector(handleDismissMenuPan(_:)))?.with {
-            $0.cancelsTouchesInView = false
-        }
+        return UIPanGestureRecognizer(addTo: view, target: self, action: #selector(handleDismissMenuPan(_:)))
     }
 
     @discardableResult func addTapToDismissGesture(to view: UIView?) -> UITapGestureRecognizer? {
