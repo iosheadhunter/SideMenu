@@ -236,6 +236,14 @@ open class SideMenuNavigationController: UINavigationController {
     override open func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
 
+        // Work-around: if the menu is dismissed without animation the transition logic is never called to restore the
+        // the view hierarchy leaving the screen black/empty. This is because the transition moves views within a container
+        // view, but dismissing without animation removes the container view before the original hierarchy is restored.
+        // This check corrects that.
+        if isBeingDismissed {
+            transitionController?.transition(presenting: false, animated: false)
+        }
+
         // Clear selection on UITableViewControllers when reappearing using custom transitions
         if let tableViewController = topViewController as? UITableViewController,
             let tableView = tableViewController.tableView,
@@ -289,27 +297,26 @@ open class SideMenuNavigationController: UINavigationController {
             return super.pushViewController(viewController, animated: animated)
         }
 
-        var alongsideTransition: (() -> Void)? = nil
-        if dismissOnPush {
-            alongsideTransition = { [weak self] in
-                guard let self = self else { return }
-                self.dismissAnimation(animated: animated || self.alwaysAnimate)
-            }
-        }
-
+        // Work-around: Current usage scenario doesn't require push animations, so we're disabling
+        // them to avoid screen blinking on dismiss and push. As push doesn't animate, we dismiss
+        // menu not in sync with push transition
         let pushed = SideMenuPushCoordinator(config:
             .init(
                 allowPushOfSameClassTwice: allowPushOfSameClassTwice,
-                alongsideTransition: alongsideTransition,
-                animated: animated,
+                alongsideTransition: {},
+                animated: false,
                 fromViewController: self,
                 pushStyle: pushStyle,
                 toViewController: viewController
             )
-            ).start()
+        ).start()
 
         if !pushed {
             super.pushViewController(viewController, animated: animated)
+        }
+
+        if dismissOnPush {
+            self.dismissMenu(animated: animated || self.alwaysAnimate)
         }
     }
 

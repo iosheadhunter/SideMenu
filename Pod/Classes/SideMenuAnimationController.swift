@@ -95,17 +95,11 @@ internal final class SideMenuAnimationController: NSObject, UIViewControllerAnim
                 alongsideTransition?()
             }, completion: { [weak self] _ in
                 guard let self = self else { return }
-                // Work-around: if the menu is dismissed without animation the transition logic is never called to restore the
-                // the view hierarchy leaving the screen black/empty. This is because the transition moves views within a container
-                // view, but dismissing without animation removes the container view before the original hierarchy is restored.
-                // Completion should be called inside dismissal completion in order to prevent blinking
-                self.presentedViewController?.dismiss(animated: false, completion: {
-                    if complete {
-                        self.transitionDidEnd(presenting: presenting, completed: true)
-                        self.finish(presenting: presenting, completed: true)
-                    }
-                    completion?(true)
-                })
+                if complete {
+                    self.transitionDidEnd(presenting: presenting, completed: true)
+                    self.finish(presenting: presenting, completed: true)
+                }
+                completion?(true)
         })
     }
 
